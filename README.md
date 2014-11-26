@@ -8,4 +8,11 @@ Ludum Dare Theme Slaughter Hotkeys
 
 Adds a practical and fast way of slaughtering themes for Ludum Dare.
 
-[Install here](https://github.com/MisaelK/mkgs/raw/master/Ludum%20Dare%20Theme%20Slaughter%20Hotkeys.user.js).
+[Install Ludum Dare Theme Slaughter Hotkeys](https://github.com/MisaelK/mkgs/raw/master/Ludum%20Dare%20Theme%20Slaughter%20Hotkeys.user.js).
+
+Soundcloud - No More Recommendations
+====================================
+
+Stops recommended tracks from playing automatically. Allows all other sets, like normal tracks on an author's page or a recommended tracks auto set.
+
+[Install Soundcloud - No More Recommendations](https://github.com/MisaelK/mkgs/raw/master/Soundcloud%20-%20No%20More%20Recommendations.user.js).
