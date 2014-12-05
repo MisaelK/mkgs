@@ -23,3 +23,7 @@ ThaSauce Compo Playlist
 Builds a HTML5 playlist with all the songs in a compo. Also works as a vote helper. ([see screenshot](http://i.imgur.com/HdsUqkD.png))
 
 [Install ThaSauce Compo Playlist](https://github.com/MisaelK/mkgs/raw/master/ThaSauce%20Compo%20Playlist.user.js).
+
+#### Installing as a bookmarklet
+
+Drag this {[ThaSauce Compo Playlist](javascript:(function(){document.body.appendChild(document.createElement('script')).src='https://github.com/MisaelK/mkgs/raw/master/ThaSauce%20Compo%20Playlist.user.js';})();)} into the bookmark bar, and click on it when you want to use it. 
