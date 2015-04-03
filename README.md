@@ -6,7 +6,7 @@ Assorted greasemonkey scripts.
 Ludum Dare Theme Slaughter Hotkeys
 ==================================
 
-Adds a practical and fast way of slaughtering themes for Ludum Dare, using hotkeys. ([see screenshot](http://i.imgur.com/CuK6BZr.png))
+Adds a practical and fast way of slaughtering themes for Ludum Dare, using hotkeys.
 
 ![animated screenshot](http://i.imgur.com/i5WfUap.gif)
 
@@ -39,4 +39,4 @@ Fast and lightweight way to run the script.
 
 3. Save the Bookmark.
 
-4. From now on, you can just click on that bookmark when you have the TPP-Tab open to enable the script.
+4. From now on, you can just click on that bookmark when you have the thaSauce compo open to enable the script.
