@@ -2,7 +2,7 @@
 // @name           Reddit Hide Siblings
 // @namespace      Misael.K
 // @author         Misael.K
-// @include        http://www.reddit.com/*/comments/*
+// @include        *.reddit.com/*/comments/*
 // @description    Adds a new "Hide Siblings" button next to each "Collapse comment" button in the Reddit comments.
 // @version        1.2
 // ==/UserScript==
