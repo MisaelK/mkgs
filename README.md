@@ -25,9 +25,9 @@ Stops recommended tracks from playing automatically. Allows all other sets, like
 ThaSauce Compo Playlist
 =======================
 
-Builds a HTML5 playlist with all the songs in a compo. Also works as a vote helper.
+Builds a HTML5 playlist with all the songs in a compo with a fancy visualization. Also works as a vote helper. [Watch gif](http://i.imgur.com/Xk11uL3.gif).
 
-![screenshot](http://i.imgur.com/diednVW.gif)
+![screenshot](http://i.imgur.com/krGamwM.png)
 
 [Install ThaSauce Compo Playlist](https://github.com/MisaelK/mkgs/raw/master/ThaSauce%20Compo%20Playlist.user.js).
 
