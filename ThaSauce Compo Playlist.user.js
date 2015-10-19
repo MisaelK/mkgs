@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.1
+// @version     1.2
 // @grant       none
 // ==/UserScript==
 
@@ -16,7 +16,7 @@ function contentEval(source) {
         // Execute this function with no arguments, by adding parentheses.
         // One set around the function, required for valid syntax, and a
         // second empty set calls the surrounded function.
-        source = '(' + source + ')();'
+        source = '(' + source + ')();';
     }
 
     // Create a script node holding this source code.
@@ -32,7 +32,7 @@ function contentEval(source) {
 
 contentEval(function() {
 
-    var jQueryScriptFile = "http://code.jquery.com/jquery-1.11.1.js";
+    var jQueryScriptFile = "http://code.jquery.com/jquery-2.1.4.min.js";
     
     // http://stackoverflow.com/a/8586564
     function loadJS(src, callback) {
@@ -59,6 +59,15 @@ contentEval(function() {
         jQuery("head").append('<style>\
         #playlist {\
             padding: 10px;\
+        }\
+        canvas#visual {\
+            display: block;\
+            width: 876px;\
+            height: 200px;\
+            background: #111;\
+            border-radius: 12px;\
+            border: 13px solid #111;\
+            margin: 10px 0 -20px 0;\
         }\
         .playlistEntries {\
             position: relative;\
@@ -191,11 +200,12 @@ contentEval(function() {
         });
 
         // if no entries were found, exit
-        if (entries === "") return
+        if (entries === "") return;
 
         // insert new div with entries
         jQuery(divRound).after('' +
             '<h3 class="related">Playlist</h3>' +
+            '<canvas id="visual" width="900" height="200">Canvas goes here</canvas>' +
             '<div class="related" id="playlist">' +
                 '<div class="playlistEntries">' +
                     '<audio controls autoplay id="audioPlayer"></audio>' +
@@ -263,8 +273,10 @@ contentEval(function() {
         // event listeners
 
         var divEntries = jQuery(".playlistEntries");
-        var entries = jQuery(divEntries).find("li");
+        entries = jQuery(divEntries).find("li");
         var audioPlayer = jQuery("#audioPlayer")[0];
+        var audioAnnounce = jQuery("#announcePlayer")[0];
+        window.currentTrackName = "";
 
         jQuery(entries).on("click", function() {
             jQuery(entries).removeClass("highlight");
@@ -272,10 +284,15 @@ contentEval(function() {
 
             audioPlayer.src = jQuery(this).attr("data-audio");
 
-            if (jQuery(announceOption).prop("checked")) {
+            var trackText = 'Now playing "' + 
+                jQuery(this).attr("data-title") + 
+                '" by ' + 
+                jQuery(this).attr("data-author");
+            window.currentTrackName = trackText;
+            if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var audioAnnounce = jQuery("#announcePlayer")[0];
-                var announceText = 'http://tts-api.com/tts.mp3?q=Now playing... ' + 
+                var announceText = 'http://www.voicerss.org/controls/speech.ashx?hl=en-us&src=' + 
+                    'Now playing... ' + 
                     encodeURI(jQuery(this).attr("data-title")) + 
                     '... by ' + 
                     encodeURI(getPronounceableName(jQuery(this).attr("data-author")));
@@ -292,6 +309,82 @@ contentEval(function() {
             var currentEntry = jQuery(entries).filter(".highlight");
             jQuery(currentEntry).parent().next().find("li").click();
         });
+        
+        // audio visualization:
+        // create an AudioContext to hold everything, 
+        // a Source (from the <audio>) to play, 
+        // and an Analyser to visualize it
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioCtx.createMediaElementSource(audioPlayer);
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.5;
+        
+        // connect the AudioNodes: source -> analyzer -> destination
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);        
+        
+        // remove higher frequencies by reducing the usable bufferLength
+        var bufferLength = (analyser.frequencyBinCount * 0.90) | 0;
+        var dataArray = new Uint8Array(bufferLength);
+        
+        // Get the CanvasContext from the <canvas> and clear it.
+        var canvas = document.querySelector('#visual');
+        var canvasCtx = canvas.getContext("2d");        
+        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // draw an oscilloscope of the current audio source
+        function draw() {
+            // for each frame, request animation frame to paint next frame,
+            // get the data from the FFT into a pre-initialized Uint8Array,
+            // paint the canvas black, and draw bars for each frequency bin
+            requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+            canvasCtx.fillStyle = '#111';
+            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+            var x = 0;
+            var barWidth;
+            var barHeight;
+            var r, g, b;
+            for (var i = 0; i < bufferLength; i++) {
+                // barWidth = (canvas.width / bufferLength) * (Math.log10(bufferLength) / Math.log10(i + 2) / Math.log10(i + 2) / Math.log10(i + 2)) * 2.7;
+                barWidth = (canvas.width / bufferLength);
+                barHeight = dataArray[i];
+                r = g = b = 0;
+                if (barHeight > 0 && barHeight <= 100) {
+                    r = 160;
+                }
+                if (barHeight > 100 && barHeight <= 170) {
+                    r = 200;
+                    g = 40;
+                }
+                if (barHeight > 170 && barHeight <= 200) {
+                    r = 200;
+                    g = 100;
+                }
+                if (barHeight > 200 && barHeight <= 230) {
+                    r = 200;
+                    g = 200;
+                }
+                if (barHeight > 230) {
+                    g = 200;
+                }
+                // tallest bars are green, taller bars are yellow, 
+                // and the rest is red
+                canvasCtx.fillStyle = "rgb(" + r + ", " + g + ", " + b + ")";
+                canvasCtx.fillRect(x, canvas.height, barWidth, barHeight / 255 * -canvas.height);
+                x += barWidth;
+            }
+            // add current track name with a subtle shadow
+            canvasCtx.textAlign = "center";
+            canvasCtx.fillStyle = "#00a";
+            canvasCtx.font = "bold 16px Consolas";
+            canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
+            canvasCtx.fillStyle = "#fff";
+            canvasCtx.font = "16px Consolas";
+            canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
+        };
+        draw();
 
         jQuery("a.sortButton").on("click", function(e) {
             var sortableEntries = jQuery(".playlistEntries div.playlistEntry");
@@ -312,8 +405,8 @@ contentEval(function() {
                 });
             } else if (jQuery(this).attr("id") === "sortButtonUploadTime") {
                 jQuery.unique(jQuery(".playlistEntries div.playlistEntry")).sortElements(function(a, b) {
-                    value1 = jQuery(a).find("li").attr("data-id") - 0;
-                    value2 = jQuery(b).find("li").attr("data-id") - 0;
+                    var value1 = jQuery(a).find("li").attr("data-id") - 0;
+                    var value2 = jQuery(b).find("li").attr("data-id") - 0;
                     var compare = (value1 > value2) ? 1 : -1;
                     if (reverse) {
                         compare = compare * -1;
@@ -322,9 +415,9 @@ contentEval(function() {
                 });
             } else if (jQuery(this).attr("id") === "sortButtonScore") {
                 jQuery.unique(jQuery(sortableEntries)).sortElements(function(a, b) {
-                    value1 = zeroPad(jQuery(a).find("li").attr("data-score")) + "-" + 
+                    var value1 = zeroPad(jQuery(a).find("li").attr("data-score")) + "-" + 
                         zeroPad(99999999 - jQuery(a).find("li").attr("data-id"));
-                    value2 = zeroPad(jQuery(b).find("li").attr("data-score")) + "-" + 
+                    var value2 = zeroPad(jQuery(b).find("li").attr("data-score")) + "-" + 
                         zeroPad(99999999 - jQuery(b).find("li").attr("data-id"));
                     var compare = (value1 > value2) ? 1 : -1;
                     if (reverse) {
@@ -334,15 +427,15 @@ contentEval(function() {
                 });
             } else if (jQuery(this).attr("id") === "sortButtonVote") {
                 jQuery.unique(jQuery(".playlistEntries div.playlistEntry")).sortElements(function(a, b) {
-                    value1 = jQuery(a).find("input:checked").parent().text();
-                    value2 = jQuery(b).find("input:checked").parent().text();
+                    var value1 = jQuery(a).find("input:checked").parent().text();
+                    var value2 = jQuery(b).find("input:checked").parent().text();
                     var compare = (value1 > value2) ? 1 : -1;
                     if (reverse) {
                         compare = compare * -1;
                     }
                     return compare;
                 });
-            };
+            }
             
             jQuery(".currentSort").removeClass("currentSort");
             jQuery(this).addClass("currentSort");
@@ -362,9 +455,9 @@ contentEval(function() {
             // remove old votelist
             var re = new RegExp("\n", "gim");
             currentDescription = currentDescription.replace(re, tempNewLineChar);
-            var re = new RegExp(separatorChar + ".*" + separatorChar, "gim");
+            re = new RegExp(separatorChar + ".*" + separatorChar, "gim");
             currentDescription = currentDescription.replace(re, "");
-            var re = new RegExp(tempNewLineChar, "gim");
+            re = new RegExp(tempNewLineChar, "gim");
             currentDescription = currentDescription.replace(re, "\n");
             
             // build votes
@@ -444,6 +537,7 @@ contentEval(function() {
         // http://www.text2speech.org/
         // http://vozme.com/text2voice.php?lang=en&text=now+playing...+%22dreams%22...+by+borkware
         // http://tts-api.com/tts.mp3?q=Now playing... title... by author
+        // http://www.voicerss.org/controls/speech.ashx?hl=en-us&src=Now playing... title... by author
 
 
         // sortElements
