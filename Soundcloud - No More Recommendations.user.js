@@ -2,7 +2,7 @@
 // @name        Soundcloud - No More Recommendations
 // @namespace   Misael.K
 // @include     https://soundcloud.com/*
-// @version     1.1
+// @version     1.1.1
 // @grant       none
 // @run-at      document-end
 // ==/UserScript==
@@ -21,7 +21,7 @@ var stopAfterCurrentTrack = false;
 function findBigPlayButton() {
     var found = false;
     // if the user manually plays the current track, stop the next track
-    var heroPlayButton = document.querySelector(".heroPlayButton");
+    var heroPlayButton = document.querySelector(".fullListenHero .playButton");
     if (heroPlayButton) {
         found = true;
         heroPlayButton.addEventListener("click", function() {
