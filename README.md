@@ -4,16 +4,6 @@ mkgs
 Assorted greasemonkey scripts.
 
 
-Ludum Dare Theme Slaughter Hotkeys
-==================================
-
-Adds a practical and fast way of slaughtering themes for Ludum Dare, using hotkeys.
-
-![animated screenshot](http://i.imgur.com/i5WfUap.gif)
-
-[Install Ludum Dare Theme Slaughter Hotkeys](https://github.com/MisaelK/mkgs/raw/master/Ludum%20Dare%20Theme%20Slaughter%20Hotkeys.user.js).
-
-
 Soundcloud - No More Recommendations
 ====================================
 
