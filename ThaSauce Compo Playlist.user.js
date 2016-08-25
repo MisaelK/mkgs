@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.2
+// @version     1.3
 // @grant       none
 // ==/UserScript==
 
@@ -54,6 +54,10 @@ contentEval(function() {
 
         // thaSauce uses Prototype, so call noConflict to release $
         jQuery.noConflict();
+        
+        var CANVAS_WIDTH = 876;
+        var CANVAS_HEIGHT = 400;
+        var CANVAS_HEIGHT_VIEWPORT = 400;
 
         // all the CSS goes here
         jQuery("head").append('<style>\
@@ -62,8 +66,8 @@ contentEval(function() {
         }\
         canvas#visual {\
             display: block;\
-            width: 876px;\
-            height: 200px;\
+            width: ' + CANVAS_WIDTH + 'px;\
+            height: ' + CANVAS_HEIGHT_VIEWPORT + 'px;\
             background: #111;\
             border-radius: 12px;\
             border: 13px solid #111;\
@@ -205,7 +209,7 @@ contentEval(function() {
         // insert new div with entries
         jQuery(divRound).after('' +
             '<h3 class="related">Playlist</h3>' +
-            '<canvas id="visual" width="900" height="200">Canvas goes here</canvas>' +
+            '<canvas id="visual" width="' + CANVAS_WIDTH + '" height="' + CANVAS_HEIGHT + '">Canvas goes here</canvas>' +
             '<div class="related" id="playlist">' +
                 '<div class="playlistEntries">' +
                     '<audio controls autoplay id="audioPlayer"></audio>' +
@@ -310,71 +314,169 @@ contentEval(function() {
             jQuery(currentEntry).parent().next().find("li").click();
         });
         
+        
         // audio visualization:
         // create an AudioContext to hold everything, 
         // a Source (from the <audio>) to play, 
         // and an Analyser to visualize it
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var source = audioCtx.createMediaElementSource(audioPlayer);
-        var analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.5;
+        if (!window.analyser) {
+            window.analyser = audioCtx.createAnalyser();
+        }
+        analyser.fftSize = 4096; // min 32
+        analyser.smoothingTimeConstant = 0;
+        analyser.minDecibels = -85;
+        analyser.maxDecibels = -40;
         
         // connect the AudioNodes: source -> analyzer -> destination
         source.connect(analyser);
-        analyser.connect(audioCtx.destination);        
-        
-        // remove higher frequencies by reducing the usable bufferLength
-        var bufferLength = (analyser.frequencyBinCount * 0.90) | 0;
-        var dataArray = new Uint8Array(bufferLength);
+        analyser.connect(audioCtx.destination);
         
         // Get the CanvasContext from the <canvas> and clear it.
         var canvas = document.querySelector('#visual');
-        var canvasCtx = canvas.getContext("2d");        
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        var canvasCtx = canvas.getContext("2d");
+        canvasCtx.fillStyle = '#000';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // draw an oscilloscope of the current audio source
+        window.bufferLength = analyser.frequencyBinCount;
+        window.dataArray = new Uint8Array(bufferLength);
+        
+        var offscreenCanvas = document.createElement("canvas");
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
+        var offscreenCanvasCtx = offscreenCanvas.getContext("2d");
+        offscreenCanvasCtx.fillStyle = '#000';
+        offscreenCanvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        window.canvasScale = 0.10;
+        // window.targetFPS = 150; // will autoset later automatically
+        
+        window.virtualHeight = canvas.height;
+        virtualHeight = (offscreenCanvas.height + ((4.6 / window.canvasScale) * bufferLength * 2 / offscreenCanvas.height))|0;
+        window.y1 = window.y2 = 0;
+        window.lightness = 0;
+        window.color = "";
+        window.FPS = Array(60);
+        
+        window.frameTime = 0;
+        window.cycleTime = (1000 / window.targetFPS);
+        window.previousCycleDuration = (1000 / window.targetFPS);
+        window.index = 0;
+        // window.nextFPSAutoset = 0;
+
+        // draw the current audio source
         function draw() {
-            // for each frame, request animation frame to paint next frame,
-            // get the data from the FFT into a pre-initialized Uint8Array,
-            // paint the canvas black, and draw bars for each frequency bin
-            requestAnimationFrame(draw);
-            analyser.getByteFrequencyData(dataArray);
-            canvasCtx.fillStyle = '#111';
-            canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-            var x = 0;
-            var barWidth;
-            var barHeight;
-            var r, g, b;
-            for (var i = 0; i < bufferLength; i++) {
-                // barWidth = (canvas.width / bufferLength) * (Math.log10(bufferLength) / Math.log10(i + 2) / Math.log10(i + 2) / Math.log10(i + 2)) * 2.7;
-                barWidth = (canvas.width / bufferLength);
-                barHeight = dataArray[i];
-                r = g = b = 0;
-                if (barHeight > 0 && barHeight <= 100) {
-                    r = 160;
-                }
-                if (barHeight > 100 && barHeight <= 170) {
-                    r = 200;
-                    g = 40;
-                }
-                if (barHeight > 170 && barHeight <= 200) {
-                    r = 200;
-                    g = 100;
-                }
-                if (barHeight > 200 && barHeight <= 230) {
-                    r = 200;
-                    g = 200;
-                }
-                if (barHeight > 230) {
-                    g = 200;
-                }
-                // tallest bars are green, taller bars are yellow, 
-                // and the rest is red
-                canvasCtx.fillStyle = "rgb(" + r + ", " + g + ", " + b + ")";
-                canvasCtx.fillRect(x, canvas.height, barWidth, barHeight / 255 * -canvas.height);
-                x += barWidth;
+            frameTime = Date.now();
+            
+            if (audioPlayer.paused) {
+                window.previousCycleDuration = (Date.now() - window.cycleTime);
+                window.cycleTime = Date.now();
+                // setTimeout(draw, (1000 / window.targetFPS) - (Date.now() - frameTime));
+                // // setTimeout(draw, 33);
+                requestAnimationFrame(draw);
+                return;
             }
+
+            analyser.getByteFrequencyData(dataArray);
+            
+            var translationAmount = Math.round(window.previousCycleDuration / 16);
+            
+            offscreenCanvasCtx.drawImage(offscreenCanvas, -1 * translationAmount, 0);
+            // offscreenCanvasCtx.drawImage(offscreenCanvas, -1, 0);
+            // for (index = 0; index < translationAmount; index++) {
+                // offscreenCanvasCtx.drawImage(offscreenCanvas, -1, 0);
+            // }
+
+            if (translationAmount > 1) {
+                offscreenCanvasCtx.drawImage(offscreenCanvas, 
+                    offscreenCanvas.width - 2, 0, 2, offscreenCanvas.height, 
+                    offscreenCanvas.width - 1 * translationAmount, 0, 1 * translationAmount, offscreenCanvas.height
+                );
+            }
+
+            // // FAKE PROCESSING TIME
+            // if (Math.random() > 0.995) {
+                // for (var i = 0; i < 4000000; i++) {
+                    // index = i + "";
+                // }
+                // console.log("FAKE PROCESSING TIME");
+            // }
+
+            // // fillRect method
+            // for (index = 0; index < bufferLength; index++) {
+                // y1 = index;
+                // y1 = Math.round(Math.pow(y1, window.canvasScale) / Math.pow(bufferLength, window.canvasScale) * bufferLength);
+                // y1 = Math.round(virtualHeight - y1 / bufferLength * virtualHeight);
+                // y2 = index + 1;
+                // y2 = Math.round(Math.pow(y2, window.canvasScale) / Math.pow(bufferLength, window.canvasScale) * bufferLength);
+                // y2 = Math.round(virtualHeight - y2 / bufferLength * virtualHeight);
+                
+                // // lightness = (dataArray[i] * 1.5 - 100)|0;
+                // lightness = dataArray[index];
+                // if (lightness < 200) {
+                    // offscreenCanvasCtx.fillStyle = "rgb(" + lightness + ", " + ((lightness / 2)|0) + ", " + ((lightness / 5)|0) + ")";
+                // } else if (lightness >= 200) {
+                    // offscreenCanvasCtx.fillStyle = "rgb(" + lightness + ", " + lightness + ", " + 0 + ")";
+                // }
+                
+                // offscreenCanvasCtx.fillRect(offscreenCanvas.width - 2, y1, 2, y2 - y1);
+            // }
+
+            // gradient method
+            window.gradient = offscreenCanvasCtx.createLinearGradient(offscreenCanvas.width - 2, 0, offscreenCanvas.width, virtualHeight);
+            for (index = bufferLength - 1; index >= 4; index--) {
+                y1 = index;
+                y1 = Math.round(Math.pow(y1, window.canvasScale) / Math.pow(bufferLength, window.canvasScale) * bufferLength);
+                
+                lightness = dataArray[index];
+                // if (lightness < 230) {
+                    // lightness = (lightness * 1.11)|0;
+                // }
+                if (lightness < 127) {
+                    lightness = lightness * 2;
+                } else {
+                    lightness = (lightness - 127) * 2;
+                }
+                // if (lightness > 255) {
+                    // lightness = 255;
+                // }
+                if (lightness == 0) {
+                    window.color = "rgb(0, 0, 0)";
+                } else if (lightness > 0 && lightness < 100) {
+                    // lightness = (lightness * 1.5)|0 + 20;
+                    window.color = "rgb(" + lightness + ", " + ((lightness / 5)|0) + ", " + 0 + ")";
+                } else if (lightness >= 100 && lightness < 200) {
+                    window.color = "rgb(" + lightness + ", " + ((lightness / 4)|0) + ", " + 0 + ")";
+                } else if (lightness >= 200 && lightness < 240) {
+                    window.color = "rgb(" + lightness + ", " + ((lightness / 1.25)|0) + ", " + ((lightness / 7)|0) + ")";
+                } else if (lightness >= 240 && lightness < 255) {
+                    window.color = "rgb(" + lightness + ", " + ((lightness / 1.05)|0) + ", " + ((lightness / 5)|0) + ")";
+                } else if (lightness == 255) {
+                    window.color = "rgb(255, 255, 90)";
+                } else if (lightness > 255) {
+                    window.color = "rgb(255, 255, " + lightness + ")";
+                }
+                
+                y1 = y1 / bufferLength;
+                gradient.addColorStop(1 - y1, window.color);
+            }
+            offscreenCanvasCtx.fillStyle = gradient;
+            offscreenCanvasCtx.fillRect(offscreenCanvas.width - 2, 0, offscreenCanvas.width, offscreenCanvas.height);
+            
+            canvasCtx.drawImage(offscreenCanvas, 0, 0);
+            
+            // for (var i = 0; i < bufferLength - 1; i++) {
+                // if (i % 15 === 0) {
+                    // y1 = i;
+                    // y1 = Math.round(Math.pow(y1, window.canvasScale) / Math.pow(bufferLength, window.canvasScale) * bufferLength);
+                    // canvasCtx.textAlign = "left";
+                    // canvasCtx.fillStyle = "#fff";
+                    // canvasCtx.font = "12px Consolas";
+                    // canvasCtx.fillText(y1 + " - " + i + " - " + bufferLength, 500, i);
+                // }
+            // }
+            
             // add current track name with a subtle shadow
             canvasCtx.textAlign = "center";
             canvasCtx.fillStyle = "#00a";
@@ -383,8 +485,53 @@ contentEval(function() {
             canvasCtx.fillStyle = "#fff";
             canvasCtx.font = "16px Consolas";
             canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
+            
+            canvasCtx.textAlign = "left";
+            canvasCtx.fillStyle = "#fff";
+            canvasCtx.font = "12px Consolas";
+            canvasCtx.fillText("frameTime: " + zeroPad(Date.now() - frameTime, 3), 15, 30);
+
+            window.newFPS = (1000 / (Date.now() - cycleTime))|0;
+            window.FPS.push(newFPS);
+            window.FPS = window.FPS.slice(1);
+            window.avgFPS = 0; for (index in window.FPS) {avgFPS += (FPS[index]|0)}; 
+            avgFPS = Math.round(avgFPS / window.FPS.length);
+            
+            // window.nextFPSAutoset++;
+            // if (window.nextFPSAutoset == 60) {
+                // if (avgFPS + 2 < window.targetFPS && avgFPS > 15) {
+                    // avgFPS -= 5;
+                // }
+                // for (index = 0; index < 200000; index++) {
+                    // avgFPS = avgFPS;
+                // }
+                // // window.targetFPS = avgFPS + 1;
+                // window.nextFPSAutoset = 0;
+            // }
+
+            canvasCtx.textAlign = "left";
+            canvasCtx.fillStyle = "#fff";
+            canvasCtx.font = "12px Consolas";
+            canvasCtx.fillText("cycleTime: " + zeroPad(Date.now() - window.cycleTime, 3), 15, 45);
+
+            canvasCtx.textAlign = "left";
+            canvasCtx.fillStyle = "#fff";
+            canvasCtx.font = "12px Consolas";
+            // canvasCtx.fillText("FPS avg: " + avgFPS + " (target " + window.targetFPS + ")", 15, 60);
+            canvasCtx.fillText("FPS avg: " + avgFPS, 15, 60);
+
+            window.previousCycleDuration = (Date.now() - window.cycleTime);
+            window.cycleTime = Date.now();
+            
+            // setTimeout(draw, (1000 / window.targetFPS) - (Date.now() - frameTime));
+            // setTimeout(draw, 33);
+            
+            requestAnimationFrame(draw);
+            
+            
         };
         draw();
+        
 
         jQuery("a.sortButton").on("click", function(e) {
             var sortableEntries = jQuery(".playlistEntries div.playlistEntry");
@@ -496,8 +643,9 @@ contentEval(function() {
 
         // extras
 
-        function zeroPad (number) {
-            return ("00000000" + number).slice(-8);
+        function zeroPad (number, padSize) {
+            if (padSize === undefined) padSize = 8;
+            return (Array(padSize + 1).join("0") + number).slice(-padSize);
         }
 
         var pronounceableNames = {
@@ -505,16 +653,19 @@ contentEval(function() {
             "a-zu-ra": "ah-zoo-ra",
             "beetie swelle": "beedee swell",
             "cii": "see",
-            "cjthemusicdude": "CJ the music dude",
+            "cjthemusicdude": "C J the music dude",
             "draconiator": "druh cone ee ator",
             "dusthillguy": "dusthill guy",
-            "gercr": "gur CR",
-            "johnfn": "john FN",
+            "gercr": "gur C R",
+            "johnfn": "john F N",
+            "koekepan": "cook a pun",
             "mcmiagblackmanisgod": "my cutie mark is a gun, black man is god",
-            "misael.k": "me-sigh-ale ka",
+            "misael.k": "me-sigh-ale kah",
+            "nicole_adams": "nicole adams",
             "omgitslewis": "oh em gee it's lewis",
             "patashu": "pat-a-shoe",
             "sci": "sigh",
+            "random-storykeeper": "random story keeper",
             "reali-tglitch": "reality glitch",
             "seventhelement": "seventh element",
             "shadow psyclone": "shadow cyclone",
