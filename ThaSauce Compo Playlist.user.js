@@ -425,38 +425,54 @@ contentEval(function() {
 
             // gradient method
             window.gradient = offscreenCanvasCtx.createLinearGradient(offscreenCanvas.width - 2, 0, offscreenCanvas.width, virtualHeight);
+            var r = g = b = 0;
             for (index = bufferLength - 1; index >= 4; index--) {
                 y1 = index;
                 y1 = Math.round(Math.pow(y1, window.canvasScale) / Math.pow(bufferLength, window.canvasScale) * bufferLength);
                 
                 lightness = dataArray[index];
-                // if (lightness < 230) {
-                    // lightness = (lightness * 1.11)|0;
-                // }
+                
                 if (lightness < 127) {
-                    lightness = lightness * 2;
+                    b = 0;
+                    if (lightness > 60) {
+                        r = (lightness / 1.2)|0;
+                        g = (lightness / 7)|0;
+                    } else {
+                        r = (lightness / 3)|0;
+                        g = 0;
+                    }
                 } else {
                     lightness = (lightness - 127) * 2;
+                    if (lightness == 0) {
+                        r = g = b = 0;
+                    } else if (lightness > 0 && lightness < 100) {
+                        r = lightness;
+                        g = ((lightness / 5)|0);
+                        b = 0;
+                    } else if (lightness >= 100 && lightness < 200) {
+                        r = lightness;
+                        g = ((lightness / 4)|0);
+                        b = 0;
+                    } else if (lightness >= 200 && lightness < 240) {
+                        r = lightness;
+                        g = ((lightness / 1.5)|0);
+                        b = ((lightness / 7)|0);
+                    } else if (lightness >= 240 && lightness < 255) {
+                        r = lightness;
+                        g = ((lightness / 1.05)|0);
+                        b = ((lightness / 5)|0);
+                    } else if (lightness == 255) {
+                        r = 255;
+                        g = 255;
+                        b = 90;
+                    } else if (lightness > 255) {
+                        r = 255;
+                        g = 255;
+                        b = lightness;
+                    }
                 }
-                // if (lightness > 255) {
-                    // lightness = 255;
-                // }
-                if (lightness == 0) {
-                    window.color = "rgb(0, 0, 0)";
-                } else if (lightness > 0 && lightness < 100) {
-                    // lightness = (lightness * 1.5)|0 + 20;
-                    window.color = "rgb(" + lightness + ", " + ((lightness / 5)|0) + ", " + 0 + ")";
-                } else if (lightness >= 100 && lightness < 200) {
-                    window.color = "rgb(" + lightness + ", " + ((lightness / 4)|0) + ", " + 0 + ")";
-                } else if (lightness >= 200 && lightness < 240) {
-                    window.color = "rgb(" + lightness + ", " + ((lightness / 1.25)|0) + ", " + ((lightness / 7)|0) + ")";
-                } else if (lightness >= 240 && lightness < 255) {
-                    window.color = "rgb(" + lightness + ", " + ((lightness / 1.05)|0) + ", " + ((lightness / 5)|0) + ")";
-                } else if (lightness == 255) {
-                    window.color = "rgb(255, 255, 90)";
-                } else if (lightness > 255) {
-                    window.color = "rgb(255, 255, " + lightness + ")";
-                }
+                
+                window.color = "rgb(" + r + ", " + g + ", " + b + ")";                
                 
                 y1 = y1 / bufferLength;
                 gradient.addColorStop(1 - y1, window.color);
