@@ -1,10 +1,10 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name        ThaSauce Compo Playlist
 // @namespace   Misael.K
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.2
+// @version     1.3
 // @grant       none
 // ==/UserScript==
 
@@ -56,6 +56,7 @@ contentEval(function() {
         jQuery.noConflict();
 
         // all the CSS goes here
+        /*jshint multistr: true */
         jQuery("head").append('<style>\
         #playlist {\
             padding: 10px;\
@@ -167,7 +168,7 @@ contentEval(function() {
             return jQuery(a).attr("data-id") - 0 > jQuery(b).attr("data-id") - 0 ? 1 : -1;
         }
         ).each(function() {
-            var entryAudio = jQuery(this).find(".item_download a:eq(0)").attr("href");
+            var entryAudio = jQuery(this).find(".item_download a[href*='mp3']:eq(0)").attr("href");
             var entryTitle = jQuery(this).attr("data-title");
             var entryAuthor = jQuery(this).attr("data-author");
             var entryId = jQuery(this).attr("data-id");
@@ -291,7 +292,7 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'http://www.voicerss.org/controls/speech.ashx?hl=en-us&src=' + 
+                var announceText = 'http://api.naturalreaders.com/v0/tts/?src=pw&r=42&s=1&t=' +
                     'Now playing... ' + 
                     encodeURI(jQuery(this).attr("data-title")) + 
                     '... by ' + 
@@ -314,6 +315,7 @@ contentEval(function() {
         // create an AudioContext to hold everything, 
         // a Source (from the <audio>) to play, 
         // and an Analyser to visualize it
+        /*jshint -W056 */
         var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var source = audioCtx.createMediaElementSource(audioPlayer);
         var analyser = audioCtx.createAnalyser();
@@ -383,7 +385,7 @@ contentEval(function() {
             canvasCtx.fillStyle = "#fff";
             canvasCtx.font = "16px Consolas";
             canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
-        };
+        }
         draw();
 
         jQuery("a.sortButton").on("click", function(e) {
