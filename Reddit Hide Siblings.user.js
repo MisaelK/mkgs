@@ -65,7 +65,7 @@ window.hideSiblings = function(comment) {
 }
 
 // adds the new expand button
-var hideSiblingsButton = '<a class="expand hideSiblings" onclick="return hideSiblings(this)" href="javascript:void(0)" title="Hide Siblings">[&ndash;^]</a>';
+var hideSiblingsButton = '<a style="left: 16px; padding-left: 2px; padding-right: 2px" class="expand hideSiblings" onclick="return hideSiblings(this)" href="javascript:void(0)" title="Hide Siblings">[&ndash;^]</a>';
 $(".noncollapsed a.expand").after(hideSiblingsButton);
 
 // end contentEval
