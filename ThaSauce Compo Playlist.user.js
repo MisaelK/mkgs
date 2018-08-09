@@ -312,7 +312,7 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'http://api.naturalreaders.com/v0/tts/?src=pw&r=42&s=1&t=' +
+                var announceText = 'http://anonymouse.org/cgi-bin/anon-www.cgi/https://cache-a.oddcast.com/tts/gen.php?EID=3&LID=1&VID=3&IS_UTF8=1&ACC=3314795&API=2292376&CB=vw_mc.vwCallback&HTTP_ERR=1&vwApiVersion=2&TXT=' +
                     'Now playing... ' +
                     encodeURI(jQuery(this).attr("data-title")) +
                     '... by ' +
