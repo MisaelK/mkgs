@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4
+// @version     1.4.1
 // @grant       none
 // ==/UserScript==
 
