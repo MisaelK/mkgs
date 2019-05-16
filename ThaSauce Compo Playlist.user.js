@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4.1
+// @version     1.4.2
 // @grant       none
 // ==/UserScript==
 
@@ -312,7 +312,7 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'http://anonymouse.org/cgi-bin/anon-www.cgi/https://cache-a.oddcast.com/tts/gen.php?EID=3&LID=1&VID=3&IS_UTF8=1&ACC=3314795&API=2292376&CB=vw_mc.vwCallback&HTTP_ERR=1&vwApiVersion=2&TXT=' +
+                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v1/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
                     'Now playing... ' +
                     encodeURI(jQuery(this).attr("data-title")) +
                     '... by ' +
