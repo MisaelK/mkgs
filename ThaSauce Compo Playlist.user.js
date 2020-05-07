@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4.2
+// @version     1.4.3
 // @grant       none
 // ==/UserScript==
 
@@ -185,7 +185,7 @@ contentEval(function() {
             return jQuery(a).attr("data-id") - 0 > jQuery(b).attr("data-id") - 0 ? 1 : -1;
         }
         ).each(function() {
-            var entryAudio = jQuery(this).find(".item_download a[href*='mp3']:eq(0)").attr("href");
+            var entryAudio = jQuery(this).find(".item_download .song-download").attr("href");
             var entryTitle = jQuery(this).attr("data-title");
             var entryAuthor = jQuery(this).attr("data-author");
             var entryId = jQuery(this).attr("data-id");
@@ -193,7 +193,7 @@ contentEval(function() {
             entryScore = entryScore.slice(entryScore.indexOf("Score: ") + "Score: ".length) - 0;
             entries += '<div class="playlistEntry">' +
                 '<li ' +
-                    'data-audio="' + window.location.origin + entryAudio + '" ' +
+                    'data-audio="' + entryAudio + '" ' +
                     'data-author="' + entryAuthor + '" ' +
                     'data-title="' + entryTitle + '" ' +
                     'data-id="' + entryId + '" ' +
@@ -312,7 +312,7 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v1/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
+                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v2/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
                     'Now playing... ' +
                     encodeURI(jQuery(this).attr("data-title")) +
                     '... by ' +
@@ -525,8 +525,10 @@ contentEval(function() {
 
         var pronounceableNames = {
             "1f1n1ty": "ifinity",
+            "animatrix1490": "ani matrix 1490",
             "adamth3walker": "adam the walker",
             "a-zu-ra": "ah-zoo-ra",
+            "bo0m3r31337": "boomer elite",
             "beetie swelle": "beedee swell",
             "cii": "see",
             "cjthemusicdude": "CJ the music dude",
@@ -534,8 +536,11 @@ contentEval(function() {
             "ddrkirbyisq": "D D R Kirby - I S Q",
             "draconiator": "druh cone ee ator",
             "dusthillguy": "dusthill guy",
+            "ethansight": "ethan sight",
             "gercr": "gur CR",
+            "jessiejames1978": "jessie james 1978",
             "johnfn": "john FN",
+            "koekepan": "cook-a-pan",
             "nickc": "nick C",
             "mcmiagblackmanisgod": "my cutie mark is a gun, black man is god",
             "misael.k": "me-sah-elle-kah",
@@ -546,10 +551,12 @@ contentEval(function() {
             "reali-tglitch": "reality glitch",
             "seventhelement": "seventh element",
             "shadow psyclone": "shadow cyclone",
+            "silverpool64": "Silver Pool 64",
             "somasis": "so may sis",
             "somasismakesbadstuff": "so may sis makes bad stuff",
             "supaspeedstrut": "supa speed strut",
             "suzumebachi": "sue-zoo-may-bah-chee",
+            "thevideogamer": "the video gamer",
             "trancient": "tran-see-ent",
             "wolfofsadness": "wolf of sadness"
         };
