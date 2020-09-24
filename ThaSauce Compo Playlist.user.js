@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4.3
+// @version     1.4.4
 // @grant       none
 // ==/UserScript==
 
@@ -251,7 +251,7 @@ contentEval(function() {
 
         // if voting already occured, remove the voting helpers,
         // else, remove the "Score" order
-        if (jQuery("input[type='submit']").length === 0) {
+        if (jQuery("button[type='submit']").length === 0) {
             jQuery("form.votingHelper").remove();
             jQuery("a.sortButton:contains('Vote')").hide();
         } else {
@@ -312,7 +312,7 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v2/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
+                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v3/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
                     'Now playing... ' +
                     encodeURI(jQuery(this).attr("data-title")) +
                     '... by ' +
