@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4.4
+// @version     1.4.5
 // @grant       none
 // ==/UserScript==
 
@@ -260,7 +260,7 @@ contentEval(function() {
 
         // BUG: reselection of votes is not working properly
         // // parse voting list to re-select votes
-        // var voteDescription = jQuery("#VoteDescription");
+        // var voteDescription = jQuery(".ql-editor");
         // if (jQuery(voteDescription).length !== 0) {
             // var separatorChar = String.fromCharCode(160);
             // var tempNewLineChar = String.fromCharCode(755);
@@ -467,10 +467,13 @@ contentEval(function() {
         });
 
         jQuery("form.votingHelper input").on("click", function() {
-            var separatorChar = String.fromCharCode(160);
+            //var separatorChar = String.fromCharCode(160);
+            var separatorStart = '<p class="pepe">';
+            var separatorEnd = '</p>';
             var tempNewLineChar = String.fromCharCode(755);
-            var voteDescription = jQuery("#VoteDescription");
-            var currentDescription = jQuery(voteDescription).val();
+            var voteDescription = jQuery(".ql-editor");
+            var currentDescription = jQuery(voteDescription).html();
+            console.log("original description:", currentDescription);
             var voteList = "";
             var goodEntries = "";
             var awesumEntries = "";
@@ -478,10 +481,12 @@ contentEval(function() {
             // remove old votelist
             var re = new RegExp("\n", "gim");
             currentDescription = currentDescription.replace(re, tempNewLineChar);
-            re = new RegExp(separatorChar + ".*" + separatorChar, "gim");
+            re = new RegExp(separatorStart + ".*?" + separatorEnd.replace("/", "\\/"), "gim");
             currentDescription = currentDescription.replace(re, "");
             re = new RegExp(tempNewLineChar, "gim");
             currentDescription = currentDescription.replace(re, "\n");
+
+            console.log("description without votes:", currentDescription);
 
             // build votes
             jQuery("form.votingHelper input").each(function() {
@@ -496,7 +501,7 @@ contentEval(function() {
             });
 
             // build votelist with votes
-            voteList += separatorChar + "\n\n";
+            voteList += separatorStart + "\n\n";
             if (awesumEntries) {
                 voteList += "awesum: " + awesumEntries.slice(0, -2) + ".";
             }
@@ -506,14 +511,15 @@ contentEval(function() {
             if (goodEntries) {
                 voteList += "good: " + goodEntries.slice(0, -2) + ".";
             }
-            voteList += separatorChar;
+            voteList += separatorEnd;
 
             // only add votelist if there were any votes at all
             if (goodEntries || awesumEntries) {
                 currentDescription += voteList;
             }
 
-            jQuery(voteDescription).val(currentDescription);
+            console.log("final description:", currentDescription);
+            jQuery(voteDescription).html(currentDescription);
         });
 
 
