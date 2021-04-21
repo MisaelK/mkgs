@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Image Viewing Controls
 // @namespace    Misael.K
-// @version      1.0.1
+// @version      1.1
 // @description  Image Viewing Controls for all single-view images.
 // @author       Misael.K
 // @include      /.*?\/.*?(\.|\=)(jpg|png|mjpg|jpeg|gif|bmp|webp).*?$/
@@ -10,10 +10,10 @@
 
 // ################
 var debug = false;
+var debugProperties = false;
 // ################
 
 // TODO: make rotate work relative to mouse position
-// TODO: make scroll work relative to scale
 
 var img = document.querySelector("img") || document.querySelector("video");
 var body = document.querySelector("body");
@@ -185,6 +185,9 @@ document.addEventListener("mousemove", function(e) {
     }
 
     if (e.buttons === 1 && !e.altKey) {
+        // removes transitions when dragging with the mouse
+        // for increased responsiveness
+        img.style.transition = "";
         readProperties();
         translateX += (e.clientX - oldX) / scale;
         translateY += (e.clientY - oldY) / scale;
@@ -214,7 +217,6 @@ document.addEventListener("keypress", function(e) {
     var faster;
     var additionalProperties;
 
-
     // prevent normal enlarge and shrink
     if (e.ctrlKey) {
         if (e.charCode === 43 || e.charCode === 45) {
@@ -229,7 +231,12 @@ document.addEventListener("keypress", function(e) {
             imageRenderingMode = "auto";
         }
         img.style["image-rendering"] = imageRenderingMode;
-        console.log(imageRenderingMode, img.style["image-rendering"]);
+        if (debug) console.log(imageRenderingMode, img.style["image-rendering"]);
+    }
+
+    // activate transitions for zoom smoothing
+    if (e.charCode === 43 || e.charCode === 45) { // + -
+        img.style.transition = "transform 0.05s linear";
     }
 
     if (e.charCode === 43) { // +
@@ -282,33 +289,60 @@ document.addEventListener("keypress", function(e) {
         setExpandHeight();
         scaleMode = 4;
         updateProperties();
-    } else if (e.keyCode === 38) { // up
-        slower = e.ctrlKey ? (1 / 6) : 1;
-        faster = e.shiftKey ? (1 * 6) : 1;
+    }
+
+});
+document.addEventListener("keydown", function(e) {
+    // if (debug) console.log(e);
+    var slower;
+    var faster;
+    var movementAmount = 20;
+    // TODO: for perfect 1 pixel movement on all scales the image size must be taken into consideration,
+    // as translateX and translateY depend on it implicitly
+    var slowerScale = movementAmount * (1 / scale);
+    var fasterScale = 20;
+    var additionalProperties;
+
+    // prevent normal enlarge and shrink
+    if (e.ctrlKey) {
+        if (e.keyCode === 107 || e.keyCode === 109) { // + -
+            e.preventDefault();
+            return;
+        }
+        if (e.keyCode === 96 || e.keyCode == 48) { // 0 NumPad0
+            additionalProperties = {"charCode": 49};
+            triggerEvent(document, "keypress", additionalProperties);
+            return;
+        }
+    }
+
+    if (e.keyCode === 38) { // up
+        slower = e.ctrlKey ? (1 / slowerScale) : 1;
+        faster = e.shiftKey ? (1 * fasterScale) : 1;
         additionalProperties = {
-            "deltaY": -3 * slower * faster
+            "movementAmount": -1 * slower * faster * movementAmount * (1 / scale)
         };
         triggerEvent(document, "wheel", additionalProperties);
     } else if (e.keyCode === 39) { // right
-        slower = e.ctrlKey ? (1 / 6) : 1;
-        faster = e.shiftKey ? (1 * 6) : 1;
+        slower = e.ctrlKey ? (1 / slowerScale) : 1;
+        faster = e.shiftKey ? (1 * fasterScale) : 1;
         additionalProperties = {
-            "deltaY": 3 * slower * faster,
+            "movementAmount": 1 * slower * faster * movementAmount * (1 / scale),
             "shiftKey": true
         };
         triggerEvent(document, "wheel", additionalProperties);
     } else if (e.keyCode === 40) { // down
-        slower = e.ctrlKey ? (1 / 6) : 1;
-        faster = e.shiftKey ? (1 * 6) : 1;
+        slower = e.ctrlKey ? (1 / slowerScale) : 1;
+        faster = e.shiftKey ? (1 * fasterScale) : 1;
         additionalProperties = {
-            "deltaY": 3 * slower * faster
+            "movementAmount": 1 * slower * faster * movementAmount * (1 / scale)
         };
         triggerEvent(document, "wheel", additionalProperties);
     } else if (e.keyCode === 37) { // left
-        slower = e.ctrlKey ? (1 / 6) : 1;
-        faster = e.shiftKey ? (1 * 6) : 1;
+        slower = e.ctrlKey ? (1 / slowerScale) : 1;
+        faster = e.shiftKey ? (1 * fasterScale) : 1;
         additionalProperties = {
-            "deltaY": -3 * slower * faster,
+            "movementAmount": -1 * slower * faster * movementAmount * (1 / scale),
             "shiftKey": true
         };
         triggerEvent(document, "wheel", additionalProperties);
@@ -323,13 +357,15 @@ document.addEventListener("keypress", function(e) {
         translateY = body.clientHeight / (2 * scale) - (img.height / 2);
         updateProperties();
     }
-
 });
-
 document.addEventListener("wheel", function(e) {
-    // if (debug) console.log(e);
+    if (debug) console.log(e);
 
     var additionalProperties;
+    var scrollingTransitionTimeMs = 150;
+    var mouseDefaultMovement = 20;
+    var movementAmount = (e.movementAmount ? e.movementAmount : mouseDefaultMovement);
+    if (e.deltaY < 0) movementAmount = movementAmount * -1;
 
     e.preventDefault();
 
@@ -345,21 +381,17 @@ document.addEventListener("wheel", function(e) {
         return;
     }
 
-    var animationTime = 150; // in ms
-    var soften = Math.abs(e.deltaY * 10);
-    for (var i = 0; i < soften; i++) {
-        setTimeout(function() {
-            readProperties();
-            if (e.shiftKey) {
-                translateX -= (e.deltaY * 10) / soften;
-            } else {
-                translateY -= (e.deltaY * 10) / soften;
-            }
-            updateProperties();
-        }, i * (animationTime / soften));
+    // use transitions when scrolling
+    img.style.transition = "transform 0.15s linear";
+    readProperties();
+    if (e.shiftKey) {
+        translateX -= movementAmount;
+    } else {
+        translateY -= movementAmount;
     }
+    updateProperties();
 
-});
+}, {passive: false}); // Active event required for mouse zoom prevention
 
 function readProperties() {
     // read CSS properties from img element
@@ -393,7 +425,7 @@ function updateProperties() {
         "rotate(" + rotate + "deg)";
     img.style.transform = newTransform;
 
-    if (debug) console.log(newTransform);
+    if (debugProperties) console.log(newTransform);
 }
 
 function setFit() {
@@ -440,6 +472,7 @@ function setExpandHeight() {
 }
 
 function triggerEvent(element, eventName, additionalProperties) {
+    if (debug) console.log("TriggerEvent", element, eventName, additionalProperties);
     var newEvent = document.createEvent("HTMLEvents");
     newEvent.initEvent(eventName, true, true);
     if (additionalProperties) {
