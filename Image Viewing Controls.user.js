@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Image Viewing Controls
 // @namespace    Misael.K
-// @version      1.1
+// @version      1.1.1
 // @description  Image Viewing Controls for all single-view images.
 // @author       Misael.K
 // @include      /.*?\/.*?(\.|\=)(jpg|png|mjpg|jpeg|gif|bmp|webp).*?$/
@@ -73,8 +73,8 @@ else css.appendChild(document.createTextNode(styles));
 document.getElementsByTagName("head")[0].appendChild(css);
 
 // this style allows to show the "move" cursor outside the image
-body.style.width = "100%";
-body.style.height = "100%";
+body.style.width = "100vw";
+body.style.height = "100vh";
 
 readProperties();
 updateProperties();
@@ -170,7 +170,7 @@ document.addEventListener("mousemove", function(e) {
     if (oldY === 0) {
         oldY = e.clientY;
     }
-    
+
     if ((e.buttons === 1 && e.altKey) || e.buttons === 3) {
         readProperties();
         var oldRotate = rotate;
