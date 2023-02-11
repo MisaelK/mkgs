@@ -4,14 +4,6 @@ mkgs
 Assorted greasemonkey scripts.
 
 
-Soundcloud - No More Recommendations
-====================================
-
-Stops recommended tracks from playing automatically. Allows all other sets, like normal tracks on an author's page or a recommended tracks auto set.
-
-[Install Soundcloud - No More Recommendations](https://github.com/MisaelK/mkgs/raw/master/Soundcloud%20-%20No%20More%20Recommendations.user.js).
-
-
 ThaSauce Compo Playlist
 =======================
 
@@ -56,11 +48,11 @@ Allows for more flexibility when viewing images by themselves, like when right c
 [Install Image Viewer](https://github.com/MisaelK/mkgs/raw/master/Image%20Viewing%20Controls.user.js).
 
 
-Youtube Audio Volume Normalizer
-===============================
+PHYDN Audio Volume Normalizer
+=============================
 
-Applies a Dynamics Compressor with Gain to normalize audio in a Youtube video.
+Applies a Dynamics Compressor with Gain to normalize audio in a video. PHYDN stands for PrimeVideo, HBOMax, Youtube, Disney+, Netflix. Those are the currently supported sites.
 
-Somewhat experimental. Great for ASMR or any video without processed audio.
+Great for ASMR or movies with quiet dialogs and loud explosions, since everything will sound more or less at the same volume.
 
-[Install Youtube Audio Volume Normalizer](https://github.com/MisaelK/mkgs/raw/master/Youtube%20Audio%20Volume%20Normalizer.user.js).
+[Install PHYDN Audio Volume Normalizer](https://github.com/MisaelK/mkgs/raw/master/PHYDN%20Audio%20Volume%20Normalizer.user.js).
