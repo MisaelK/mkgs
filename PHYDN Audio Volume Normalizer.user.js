@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PHYDN Audio Volume Normalizer (PrimeVideo, HBOMax, Youtube, Disney+, Netflix)
 // @namespace    Misael.K
-// @version      1.0
+// @version      1.0.1
 // @description  Applies a Dynamics Compressor with Gain to normalize audio in a video.
 // @author       Misael.K
 // @match        https://www.netflix.com/*
@@ -176,6 +176,7 @@
             line-height: 14px;
             opacity: 0;
             transition: opacity 0.2s ease;
+            z-index: 1000;
         `;
         toastInner.style = `
             position: relative;
