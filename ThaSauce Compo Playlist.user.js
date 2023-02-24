@@ -3,8 +3,8 @@
 // @namespace   Misael.K
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
-// @include     http://compo.thasauce.net/rounds/view/*
-// @version     1.4.5
+// @match       https://compo.thasauce.net/rounds/view/*
+// @version     1.5
 // @grant       none
 // ==/UserScript==
 
@@ -32,7 +32,7 @@ function contentEval(source) {
 
 contentEval(function() {
 
-    var jQueryScriptFile = "http://code.jquery.com/jquery-2.2.4.min.js";
+    var jQueryScriptFile = "https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js";
 
     // http://stackoverflow.com/a/8586564
     function loadJS(src, callback) {
@@ -312,14 +312,30 @@ contentEval(function() {
             window.currentTrackName = trackText;
             if (jQuery("#announceOption").prop("checked")) {
                 audioPlayer.pause();
-                var announceText = 'https://text-to-speech-demo.ng.bluemix.net/api/v3/synthesize?voice=en-US_LisaVoice&accept=audio%2Fmp3&text=' +
-                    'Now playing... ' +
-                    encodeURI(jQuery(this).attr("data-title")) +
-                    '... by ' +
-                    encodeURI(getPronounceableName(jQuery(this).attr("data-author")));
-                audioAnnounce.src = announceText;
-                audioAnnounce.play();
-                jQuery(audioAnnounce).on("error ended", function() {
+                var announceText =
+                    'Now playing: ' +
+                    jQuery(this).attr("data-title") +
+                    '. By ' +
+                    getPronounceableName(jQuery(this).attr("data-author"));
+                var postData = [{"voiceId":"Amazon US English (Kendra)","ssml":"<speak version=\"1.0\" xml:lang=\"en-US\">" + announceText + "</speak>"}];
+                var xhr = jQuery.ajax({
+                    url: "https://support.readaloud.app/ttstool/createParts",
+                    type: "POST",
+                    headers: {
+                        "Accept" : "application/json; charset=utf-8",
+                        "Content-Type": "application/json; charset=utf-8"
+                    },
+                    data: JSON.stringify(postData),
+                    dataType: "json"
+                });
+                xhr.done(function(data) {
+                    audioAnnounce.src = "https://support.readaloud.app/ttstool/getParts?q=" + data[0];
+                    audioAnnounce.play();
+                    jQuery(audioAnnounce).on("error ended", function() {
+                        audioPlayer.play();
+                    });
+                });
+                xhr.fail(function(e) {
                     audioPlayer.play();
                 });
             }
@@ -574,12 +590,6 @@ contentEval(function() {
                 return baseName;
             }
         }
-
-        // http://www.text2speech.org/
-        // http://vozme.com/text2voice.php?lang=en&text=now+playing...+%22dreams%22...+by+borkware
-        // http://tts-api.com/tts.mp3?q=Now playing... title... by author
-        // http://www.voicerss.org/controls/speech.ashx?hl=en-us&src=Now playing... title... by author
-
 
         // sortElements
         /**
