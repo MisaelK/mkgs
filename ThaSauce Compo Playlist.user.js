@@ -223,7 +223,7 @@ contentEval(function() {
         // insert new div with entries
         jQuery("footer").before('' +
             '<div class="row">' +
-            '<div class="col l8 m10 s12 offset-l2 offset-m1">' +
+            '<div class="col l6 m10 s12 offset-l3 offset-m1">' +
             '<h3>Playlist</h3>' +
             '<div class="card item"><div class="card-content">' +
             '<canvas id="visual" width="900" height="200">Canvas goes here</canvas>' +
