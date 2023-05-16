@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PHYDN Audio Volume Normalizer (PrimeVideo, HBOMax, Youtube, Disney+, Netflix)
 // @namespace    Misael.K
-// @version      1.0.1
+// @version      1.0.2
 // @description  Applies a Dynamics Compressor with Gain to normalize audio in a video.
 // @author       Misael.K
 // @match        https://www.netflix.com/*
@@ -21,6 +21,7 @@
     // #######################
 
     window.mkVolumeNormalizerToggle = false;
+    window.globalSourceReload = false;
 
     // activate on keypress letter "N"
     let body = document.querySelector("body");
@@ -43,7 +44,7 @@
         if (!video) {
             video = document.querySelector('video'); // netflix, hbomax, disney, primevideo, youtube
         }
-        if (debug) console.log(video);
+        if (debug) console.log("video", video);
 
         // create and configure the label
         let normalizerLabel = document.querySelector("#mk-volume-normalize");
@@ -94,6 +95,7 @@
         let AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!window.globalAudioCtx) {
             window.globalAudioCtx = new AudioContext();
+            if (debug) console.log("new audio context", window.globalAudioCtx);
         }
         // if there's no source,
         // or the source changed (eg: after an episode ends and the next one begins),
@@ -103,11 +105,13 @@
             // if the source changed, it's possible that the contents
             // of the page got changed and previous state must be ignored
             window.mkVolumeNormalizerToggle = true;
+            if (debug) console.log("new source", window.globalSource);
         }
 
         // Create a compressor node
         if (!window.globalCompressor) {
             window.globalCompressor = window.globalAudioCtx.createDynamicsCompressor();
+            if (debug) console.log("new compressor", window.globalCompressor);
         }
         window.globalCompressor.threshold.value = -60;
         window.globalCompressor.knee.value = 5;
@@ -117,6 +121,7 @@
 
         if (!window.globalGain) {
             window.globalGain = window.globalAudioCtx.createGain();
+            if (debug) console.log("new gain", window.globalGain);
         }
         window.globalGain.gain.value = gainAmount;
 
@@ -127,20 +132,16 @@
                 normalizerLabel.style.display = "";
             }
 
-            // disconnect normal node
-            if (window.globalSource.numberOfInputs > 0) {
-                try {
-                    window.globalSource.disconnect(window.globalAudioCtx.destination);
-                } catch (disconnectException) {
-                    // exception when disconnecting: DOMException: AudioNode.disconnect: Trying to disconnect from a node we're not connected to
-                    if (debug) console.error("exception when disconnecting:", disconnectException);
-                }
+            // when re-enabling the normalizer the node, disconnect
+            if (window.globalSourceReload) {
+                window.globalSource.disconnect(window.globalAudioCtx.destination);
             }
 
             // connect the AudioBufferSourceNode to the destination
             window.globalSource.connect(window.globalCompressor);
             window.globalCompressor.connect(window.globalGain);
             window.globalGain.connect(window.globalAudioCtx.destination);
+            if (debug) console.log("source -> compressor -> gain -> destination", window.globalSource, window.globalCompressor, window.globalGain, window.globalAudioCtx.destination);
         } else {
             // disabling normalizer
             showToast("Volume Normalizer is OFF");
@@ -149,16 +150,17 @@
             }
 
             // disconnect previous nodes
-            window.globalSource.disconnect(window.globalCompressor);
-            window.globalCompressor.disconnect(window.globalGain);
-            try {
-                window.globalGain.disconnect(window.globalAudioCtx.destination);
-            } catch (disconnectException) {
-                if (debug) console.error("exception when disconnecting:", disconnectException);
-            }
+            window.globalSource.disconnect(window.globalCompressor.destination);
+            window.globalCompressor.disconnect(window.globalGain.destination);
+            window.globalGain.disconnect(window.globalAudioCtx.destination);
+            if (debug) console.log("source =x= compressor =x= gain =x= destination", window.globalSource, window.globalCompressor, window.globalGain, window.globalAudioCtx.destination);
 
             // connect nodes directly
             window.globalSource.connect(window.globalAudioCtx.destination);
+            if (debug) console.log("source -> destination", window.globalSource, window.globalAudioCtx.destination);
+
+            // when re-enabling the normalizer the node will need to be disconnected
+            window.globalSourceReload = true;
         }
     }
     function showToast(message, duration_ms = 2000) {
