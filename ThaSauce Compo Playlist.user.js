@@ -4,7 +4,7 @@
 // @author      Misael.K
 // @description Builds a playlist with the entries from a round for easy playing.
 // @match       https://compo.thasauce.net/rounds/view/*
-// @version     1.5
+// @version     1.5.1
 // @grant       none
 // ==/UserScript==
 
@@ -220,13 +220,19 @@ contentEval(function() {
         // if no entries were found, exit
         if (entries === "") return;
 
+        var proportionalCanvasWidth = 600; // fallback
+        var cardWidth = jQuery(".col.l6.m10.s12 .card .card-content").width();
+        if (cardWidth) {
+            proportionalCanvasWidth = cardWidth | 0;
+        }
+
         // insert new div with entries
         jQuery("footer").before('' +
             '<div class="row">' +
             '<div class="col l6 m10 s12 offset-l3 offset-m1">' +
             '<h3>Playlist</h3>' +
             '<div class="card item"><div class="card-content">' +
-            '<canvas id="visual" width="900" height="200">Canvas goes here</canvas>' +
+            '<canvas id="visual" width="' + proportionalCanvasWidth + '" height="200">Canvas goes here</canvas>' +
             '<div id="playlist">' +
                 '<div class="playlistEntries">' +
                     '<audio controls autoplay id="audioPlayer"></audio>' +
@@ -416,10 +422,10 @@ contentEval(function() {
             // add current track name with a subtle shadow
             canvasCtx.textAlign = "center";
             canvasCtx.fillStyle = "#00a";
-            canvasCtx.font = "bold 16px Consolas";
+            canvasCtx.font = "bold 16px Consolas,Inconsolata,monospace";
             canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
             canvasCtx.fillStyle = "#fff";
-            canvasCtx.font = "16px Consolas";
+            canvasCtx.font = "16px Consolas,Inconsolata,monospace";
             canvasCtx.fillText(window.currentTrackName, canvas.width / 2, 15);
         }
         draw();
