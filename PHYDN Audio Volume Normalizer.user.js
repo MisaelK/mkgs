@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         PHYDN Audio Volume Normalizer (PrimeVideo, HBOMax, Youtube, Disney+, Netflix)
+// @name         PHYDNT Audio Volume Normalizer (PrimeVideo, HBOMax, Youtube, Disney+, Netflix, Twitch)
 // @namespace    Misael.K
-// @version      1.0.2
+// @version      1.0.3
 // @description  Applies a Dynamics Compressor with Gain to normalize audio in a video.
 // @author       Misael.K
 // @match        https://www.netflix.com/*
@@ -10,6 +10,7 @@
 // @match        https://www.disneyplus.com/*
 // @match        https://play.hbomax.com/*
 // @match        https://www.youtube.com/*
+// @match        https://www.twitch.tv/*
 // @grant        none
 // ==/UserScript==
 
@@ -29,6 +30,7 @@
         // only activate when not on a textarea or input element
         if (document.activeElement.tagName == "TEXTAREA") return;
         if (document.activeElement.tagName == "INPUT") return;
+        if (document.activeElement.classList.contains("chat-wysiwyg-input__editor")) return;
         if (e.key.toLowerCase() === "n") {
             normalizeVolume();
         }
@@ -42,7 +44,7 @@
         let video;
         video = document.querySelector('#dv-web-player video'); // amazon
         if (!video) {
-            video = document.querySelector('video'); // netflix, hbomax, disney, primevideo, youtube
+            video = document.querySelector('video'); // netflix, hbomax, disney, primevideo, youtube, twitch
         }
         if (debug) console.log("video", video);
 
@@ -74,16 +76,20 @@
                 videoInfoMenu = document.querySelector(".controls .controls__left");
             }
             if (!videoInfoMenu) {
+                // Youtube 2020
+                videoInfoMenu = document.querySelector(".watch-active-metadata #title h1");
+            }
+            if (!videoInfoMenu) {
+                // Youtube 2024
+                videoInfoMenu = document.querySelector(".ytd-watch-metadata #title h1");
+            }
+            if (!videoInfoMenu) {
+                // twitch
+                videoInfoMenu = document.querySelector("[data-a-target='stream-title']");
+            }
+            if (!videoInfoMenu) {
                 // HBOMax
                 videoInfoMenu = document.querySelector("[role='heading']");
-            }
-            if (videoInfoMenu) {
-                // old Youtube
-                videoInfoMenu = document.querySelector("#info-contents h1.title");
-            }
-            if (videoInfoMenu) {
-                // new Youtube
-                videoInfoMenu = document.querySelector(".watch-active-metadata #title h1");
             }
             if (videoInfoMenu) {
                 videoInfoMenu.appendChild(normalizerLabel);
