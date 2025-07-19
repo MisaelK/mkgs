@@ -48,11 +48,28 @@ Allows for more flexibility when viewing images by themselves, like when right c
 [Install Image Viewer](https://github.com/MisaelK/mkgs/raw/master/Image%20Viewing%20Controls.user.js).
 
 
-PHYDN Audio Volume Normalizer
+PHYDNT Audio Volume Normalizer
 =============================
 
-Applies a Dynamics Compressor with Gain to normalize audio in a video. PHYDN stands for PrimeVideo, HBOMax, Youtube, Disney+, Netflix. Those are the currently supported sites.
+Applies a Dynamics Compressor with Gain to normalize audio in a video. PHYDNT stands for PrimeVideo, HBOMax, Youtube, Disney+, Netflix, Twitch. Those are the currently supported sites.
 
 Great for ASMR or movies with quiet dialogs and loud explosions, since everything will sound more or less at the same volume.
 
-[Install PHYDN Audio Volume Normalizer](https://github.com/MisaelK/mkgs/raw/master/PHYDN%20Audio%20Volume%20Normalizer.user.js).
+[Install PHYDNT Audio Volume Normalizer](https://github.com/MisaelK/mkgs/raw/master/PHYDN%20Audio%20Volume%20Normalizer.user.js).
+
+
+Youtube Hotkeys Speeds
+======================
+
+Adds hotkeys to Youtube videos to quickly change playback speed, from 0.25x to 8x.
+
+| Hotkey | Effect |
+| :-: | :-: |
+| Q | Reduce speed by 0.25x |
+| E | Increase seeed by 0.25x |
+| S | Change speed to 1x |
+| D | Change speed to 2x  |
+| X | Change speed to 3x  |
+| Z | Change speed to 4x  |
+
+[Install Youtube Hotkeys Speeds](https://github.com/MisaelK/mkgs/raw/master/Youtube%20hotkeys%20speeds.user.js).
