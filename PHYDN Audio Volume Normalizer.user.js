@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PHYDNT Audio Volume Normalizer (PrimeVideo, HBOMax, Youtube, Disney+, Netflix, Twitch)
 // @namespace    Misael.K
-// @version      1.0.3
+// @version      1.0.4
 // @description  Applies a Dynamics Compressor with Gain to normalize audio in a video.
 // @author       Misael.K
 // @match        https://www.netflix.com/*
@@ -27,10 +27,10 @@
     // activate on keypress letter "N"
     let body = document.querySelector("body");
     body.addEventListener("keypress", function(e) {
-        // only activate when not on a textarea or input element
+        // only activate when not on a writable element
         if (document.activeElement.tagName == "TEXTAREA") return;
         if (document.activeElement.tagName == "INPUT") return;
-        if (document.activeElement.classList.contains("chat-wysiwyg-input__editor")) return;
+        if (document.activeElement.getAttribute("contenteditable")) return;
         if (e.key.toLowerCase() === "n") {
             normalizeVolume();
         }
