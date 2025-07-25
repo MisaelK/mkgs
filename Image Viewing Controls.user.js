@@ -4,7 +4,7 @@
 // @version      1.1.1
 // @description  Image Viewing Controls for all single-view images.
 // @author       Misael.K
-// @include      /.*?\/.*?(\.|\=)(jpg|png|mjpg|jpeg|gif|bmp|webp).*?$/
+// @include      /.*?\/.*?(\.|\=|\@)(jpg|png|mjpg|jpeg|gif|bmp|webp).*?$/
 // @grant        none
 // ==/UserScript==
 
