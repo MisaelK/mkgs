@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Image Viewing Controls
 // @namespace    Misael.K
-// @version      1.1.1
+// @version      1.1.2
 // @description  Image Viewing Controls for all single-view images.
 // @author       Misael.K
 // @include      /.*?\/.*?(\.|\=|\@)(jpg|png|mjpg|jpeg|gif|bmp|webp).*?$/
